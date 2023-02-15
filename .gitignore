@@ -1,0 +1,10 @@
+.svn
+.tmp
+.download
+output
+.*.swp
+.*.swo
+log/*
+dev/
+.vscode/
+.config/
