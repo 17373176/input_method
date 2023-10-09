@@ -8,7 +8,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -17,27 +16,18 @@ import (
 )
 
 // DictLoader 单个加载
-func DictLoader(path string) (string, []*library.DictWord, error) {
+func DictLoader(path string) (library.DictData, error) {
+	var dictData library.DictData
 	var dictWords []*library.DictWord
 	// 判断文件路径是否包含http:// 或 https:// 前缀
 	spell, isRemote, err := checkFilePath(path)
 	if err != nil {
-		return "", dictWords, fmt.Errorf("checkFilePath err: %w", err)
+		return dictData, fmt.Errorf("checkFilePath err: %w", err)
 	}
 
-	if !isRemote {
-		// a. 不包含则从本地路径加载
-		dictWords, err = localDictLoader(path)
-		if err != nil {
-			// 文件读取异常：包括文件不存在，打开失败，格式有误
-			return "", dictWords, fmt.Errorf("localDictLoader err: %w", err)
-		}
-	} else {
-		// b. 包含，则 get 方法获取文件内容，body 是数据，path 最后一段是拼音本身
-		dictWords, err = httpDictLoader(path)
-		if err != nil {
-			return "", dictWords, fmt.Errorf("httpDictLoader err: %w", err)
-		}
+	dictWords, err = loadFuncMap[isRemote](path)
+	if err != nil {
+		return dictData, fmt.Errorf("dictLoader err: %w", err)
 	}
 	// spell 添加
 	for i := range dictWords {
@@ -47,7 +37,16 @@ func DictLoader(path string) (string, []*library.DictWord, error) {
 	sort.SliceStable(dictWords, func(i, j int) bool {
 		return dictWords[i].Frequency > dictWords[j].Frequency
 	})
-	return spell, dictWords, nil
+	dictData = library.DictData{
+		Spell: spell,
+		Words: dictWords,
+	}
+	return dictData, nil
+}
+
+var loadFuncMap = map[bool]func(string) ([]*library.DictWord, error){
+	true:  httpDictLoader,
+	false: localDictLoader,
 }
 
 // localDictLoader 从本地加载
@@ -82,8 +81,7 @@ func httpDictLoader(path string) ([]*library.DictWord, error) {
 // checkFilePath 文件路径检查，返回文件名即拼音
 func checkFilePath(path string) (string, bool, error) {
 	// 正则匹配 http 和 https 路径
-	re := regexp.MustCompile(library.URLRegular)
-	match := re.MatchString(path)
+	match := library.RegexMatch.MatchString(path)
 
 	// 获取文件名
 	fileName := library.FileNameFromPath(path)

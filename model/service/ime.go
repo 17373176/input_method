@@ -26,7 +26,7 @@ func NewIme(args []string, batchSize int) *Ime {
 	// 若没输入词典文件，则打错误日志，输出错误信息
 	if len(args) == 0 {
 		library.LogService.Warning("No input dict file")
-		//return ime
+		return ime
 	}
 
 	// 1. 词典加载
@@ -50,19 +50,15 @@ func (ime *Ime) dictMultiLoader(dictPathList []string, batchSize int) {
 	errCh := make([]error, len(dictPathList))
 	for i, val := range dictPathList {
 		ch <- struct{}{} // 占用缓冲区
-		// 暂存 变量, 防止循环并发不安全
-		path := val
-		index := i
-		var dictWords []*library.DictWord
-		var spell string
-		go func() {
+		go func(index int, path string) {
 			defer wg.Done()
-			spell, dictWords, errCh[index] = module.DictLoader(path)
+			var dictWords library.DictData
+			dictWords, errCh[index] = module.DictLoader(path)
 			ime.lock()
-			ime.dictWords[spell] = dictWords
+			ime.dictWords[dictWords.Spell] = dictWords.Words
 			ime.unLock()
 			<-ch // 执行完缓冲区释放
-		}()
+		}(i, val)
 	}
 	wg.Wait()
 
@@ -90,6 +86,7 @@ func (ime *Ime) buildDictTrie() {
 // FindWords 根据拼音查找前缀树，并返回所有词
 func (ime *Ime) FindWords(spell string) []string {
 	var words []string
+	searchWords := make([]*library.DictWord, 0)
 	// 1. 首先判断 spell 是否符合纯拼音字符串（纯小写），如果不是则打印错误日志
 	if len(spell) == 0 || !library.IsLowerAlphaStr(spell) {
 		library.LogService.Warning("Spell error, please cheak your input")
@@ -98,17 +95,18 @@ func (ime *Ime) FindWords(spell string) []string {
 	library.LogService.Notice("Find words by spell: " + spell)
 
 	sTime := time.Now()
-	searchWords, isExact := ime.dictTrie.Search(spell)
+	searchNode := ime.dictTrie.SearchPrefix(spell)
 	library.LogService.Timecost("Find words Search", sTime)
-	if !isExact {
-		// 非精确匹配
+	if searchNode == nil || !searchNode.GetIsEnd() {
+		// 非精确匹配，直接从精确匹配返回的节点开始往下查找，不用从根节点重复查找
 		sTime := time.Now()
-		searchWords = ime.dictTrie.StartsWith(spell)
+		mergeChildren(searchNode, &searchWords)
 		library.LogService.Timecost("Find words StartsWith", sTime)
 		searchWords = ime.sort(searchWords)
 		library.LogService.Notice("Find words: startsWith searchPrefix")
 	} else {
 		// 精确匹配
+		searchWords = searchNode.GetWords()
 		library.LogService.Notice("Find words: exact search")
 	}
 
@@ -122,6 +120,21 @@ func (ime *Ime) FindWords(spell string) []string {
 	library.LogService.Timecost("Find words", sTime)
 	library.LogService.Notice("Find words: " + strings.Join(words, ", "))
 	return words
+}
+
+// mergeChildren 将子节点符合匹配规则的数据合并，此步骤自上而下加入数组，保证了字典序，但同层级节点无序
+func mergeChildren(t *module.Trie, words *[]*library.DictWord) {
+	if t == nil {
+		return
+	}
+	if t.GetIsEnd() {
+		// 必须是完整的拼音才行
+		*words = append(*words, t.GetWords()...)
+	}
+
+	for _, child := range t.GetNodeList() {
+		mergeChildren(child, words)
+	}
 }
 
 // sort 候选词排序，由于最终只返回前10个，故采用自定义排序，实现了稳定的选择排序

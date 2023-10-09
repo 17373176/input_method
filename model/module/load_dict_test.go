@@ -7,20 +7,23 @@ import (
 	"net/http/httptest"
 	"os"
 	"reflect"
+	"regexp"
 	"testing"
 
 	"input_method/library"
 )
 
+// TestDictLoader 测试 DictLoader 的使用
 func TestDictLoader(t *testing.T) {
 	type args struct {
 		path string
 	}
+	var dictData library.DictData
+	library.RegexMatch = regexp.MustCompile(library.URLRegular)
 	tests := []struct {
 		name    string
 		args    args
-		want    string
-		want1   []*library.DictWord
+		want    library.DictData
 		wantErr bool
 	}{
 		{
@@ -28,8 +31,7 @@ func TestDictLoader(t *testing.T) {
 			args: args{
 				path: ".data/Zh.dat",
 			},
-			want:    "",
-			want1:   nil,
+			want:    dictData,
 			wantErr: true,
 		},
 		{
@@ -37,25 +39,25 @@ func TestDictLoader(t *testing.T) {
 			args: args{
 				path: "http://xxx.baidu.com/zh.dat",
 			},
-			want:    "",
-			want1:   nil,
+			want:    library.DictData{},
 			wantErr: true,
 		},
 		{
 			name: "local path",
 			args: args{path: "../../data/a.dat"},
-			want: "a",
-			want1: []*library.DictWord{
-				{
-					Word:      "啊",
-					Frequency: 10,
-					Spell:     "a",
-				},
-				{
-					Word:      "阿",
-					Frequency: 3,
-					Spell:     "a",
-				}},
+			want: library.DictData{
+				Spell: "a",
+				Words: []*library.DictWord{
+					{
+						Word:      "啊",
+						Frequency: 10,
+						Spell:     "a",
+					},
+					{
+						Word:      "阿",
+						Frequency: 3,
+						Spell:     "a",
+					}}},
 			wantErr: false,
 		},
 		{
@@ -63,29 +65,26 @@ func TestDictLoader(t *testing.T) {
 			args: args{
 				path: "zh.dat",
 			},
-			want:    "",
-			want1:   nil,
+			want:    library.DictData{},
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, got1, err := DictLoader(tt.args.path)
+			got, err := DictLoader(tt.args.path)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("DictLoader() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if got != tt.want {
-				t.Errorf("DictLoader() got = %v, want %v", got, tt.want)
-			}
-			if !reflect.DeepEqual(got1, tt.want1) {
-				t.Errorf("DictLoader() got1 = %v, want %v", got1, tt.want1)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("httpDictLoader() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func Test_localDictLoader(t *testing.T) {
+// TestLocalDictLoader 测试 LocalDictLoader 的使用
+func TestLocalDictLoader(t *testing.T) {
 	type args struct {
 		path string
 	}
@@ -136,7 +135,8 @@ func Test_localDictLoader(t *testing.T) {
 	}
 }
 
-func Test_httpDictLoader(t *testing.T) {
+// TestHttpDictLoader 测试 HttpDictLoader 的使用
+func TestHttpDictLoader(t *testing.T) {
 	type args struct {
 		path string
 	}
@@ -220,7 +220,8 @@ func Test_httpDictLoader(t *testing.T) {
 	}
 }
 
-func Test_checkFilePath(t *testing.T) {
+// TestCheckFilePath 测试 CheckFilePath 的使用
+func TestCheckFilePath(t *testing.T) {
 	type args struct {
 		path string
 	}
@@ -285,7 +286,8 @@ func Test_checkFilePath(t *testing.T) {
 	}
 }
 
-func Test_dictParsing(t *testing.T) {
+// TestDictParsing 测试 DictParsing 的使用
+func TestDictParsing(t *testing.T) {
 	type args struct {
 		file io.ReadCloser
 	}

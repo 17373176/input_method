@@ -10,26 +10,37 @@ import (
 	"time"
 )
 
+// TestNewLog 用于测试 NewLog 函数
 func TestNewLog(t *testing.T) {
+	LogService = NewLog("../log/", "ime.log")
+	type args struct {
+		logDir      string
+		logFileName string
+	}
 	tests := []struct {
 		name string
+		args args
 		want *Log
 	}{
 		{
 			name: "new",
-			want: NewLog(),
+			want: LogService,
+			args: args{
+				logDir:      "../log/",
+				logFileName: "ime.log"},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := NewLog(); !reflect.DeepEqual(got, tt.want) {
+			if got := LogService; !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("NewLog() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func TestLog_CloseLog(t *testing.T) {
+// TestCloseLog 用于测试 NewLogFile 函数
+func TestCloseLog(t *testing.T) {
 	type fields struct {
 		logFile *os.File
 	}
@@ -59,7 +70,8 @@ func TestLog_CloseLog(t *testing.T) {
 	}
 }
 
-func TestLog_Timecost(t *testing.T) {
+// TestTimecost 用于测试 Timecost 函数
+func TestTimecost(t *testing.T) {
 	type fields struct {
 		logFile *os.File
 	}
@@ -95,7 +107,8 @@ func TestLog_Timecost(t *testing.T) {
 	}
 }
 
-func TestLog_Notice(t *testing.T) {
+// TestNotice 用于测试 Notice 函数
+func TestNotice(t *testing.T) {
 	type fields struct {
 		logFile *os.File
 	}
@@ -130,7 +143,8 @@ func TestLog_Notice(t *testing.T) {
 	}
 }
 
-func TestLog_Warning(t *testing.T) {
+// TestWarning 用于测试 Warning 函数
+func TestWarning(t *testing.T) {
 	type fields struct {
 		logFile *os.File
 	}

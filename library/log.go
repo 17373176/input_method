@@ -14,8 +14,15 @@ type Log struct {
 }
 
 // NewLog 初始化
-func NewLog() *Log {
-	logFile, err := os.OpenFile(LogDir, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0766)
+func NewLog(logDir, logFileName string) *Log {
+	if _, err := os.Stat(logDir); os.IsNotExist(err) {
+		/* create directory */
+		err = os.MkdirAll(logDir, 0777)
+		if err != nil {
+			LogService.Warning(err.Error())
+		}
+	}
+	logFile, err := os.OpenFile(logDir+logFileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 	if err != nil {
 		LogService.Warning(err.Error())
 	}

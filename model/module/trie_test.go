@@ -4,9 +4,10 @@ import (
 	"reflect"
 	"testing"
 
-	"library"
+	"input_method/library"
 )
 
+// TestConstructor 测试构造函数
 func TestConstructor(t *testing.T) {
 	tests := []struct {
 		name string
@@ -26,7 +27,117 @@ func TestConstructor(t *testing.T) {
 	}
 }
 
-func TestTrie_Insert(t *testing.T) {
+// TestGetIsEnd 测试是否为结束
+func TestGetIsEnd(t *testing.T) {
+	type fields struct {
+		isEnd    bool
+		nodeList map[rune]*Trie
+		words    []*library.DictWord
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   bool
+	}{
+		{
+			name:   "not nil",
+			fields: fields{},
+			want:   false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tr := &Trie{
+				isEnd:    tt.fields.isEnd,
+				nodeList: tt.fields.nodeList,
+				words:    tt.fields.words,
+			}
+			if got := tr.GetIsEnd(); got != tt.want {
+				t.Errorf("Trie.GetIsEnd() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+// TestGetNodeList 测试获取节点列表
+func TestGetNodeList(t *testing.T) {
+	type fields struct {
+		isEnd    bool
+		nodeList map[rune]*Trie
+		words    []*library.DictWord
+	}
+	node := make(map[rune]*Trie)
+	tests := []struct {
+		name   string
+		fields fields
+		want   map[rune]*Trie
+	}{
+		{
+			name: "nil",
+			fields: fields{
+				nodeList: node,
+			},
+			want: node,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tr := &Trie{
+				isEnd:    tt.fields.isEnd,
+				nodeList: tt.fields.nodeList,
+				words:    tt.fields.words,
+			}
+			if got := tr.GetNodeList(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Trie.GetNodeList() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+// TestGetWords 测试获取词表
+func TestGetWords(t *testing.T) {
+	type fields struct {
+		isEnd    bool
+		nodeList map[rune]*Trie
+		words    []*library.DictWord
+	}
+	testWord := library.DictWord{Spell: "z", Word: "展", Frequency: 1}
+	tests := []struct {
+		name   string
+		fields fields
+		want   []*library.DictWord
+	}{
+		{
+			name: "not nil",
+			fields: fields{
+				isEnd: true,
+				nodeList: map[rune]*Trie{
+					'z': {
+						isEnd: true,
+						words: []*library.DictWord{&testWord},
+					},
+				},
+				words: []*library.DictWord{&testWord},
+			},
+			want: []*library.DictWord{&testWord},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tr := &Trie{
+				isEnd:    tt.fields.isEnd,
+				nodeList: tt.fields.nodeList,
+				words:    tt.fields.words,
+			}
+			if got := tr.GetWords(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Trie.GetWords() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+// TestInsert 测试插入节点
+func TestInsert(t *testing.T) {
 	type fields struct {
 		isEnd    bool
 		nodeList map[rune]*Trie
@@ -67,7 +178,8 @@ func TestTrie_Insert(t *testing.T) {
 	}
 }
 
-func TestTrie_searchPrefix(t *testing.T) {
+// TestSearchPrefix 测试前缀查询
+func TestSearchPrefix(t *testing.T) {
 	type fields struct {
 		isEnd    bool
 		nodeList map[rune]*Trie
@@ -131,186 +243,9 @@ func TestTrie_searchPrefix(t *testing.T) {
 				nodeList: tt.fields.nodeList,
 				words:    tt.fields.words,
 			}
-			if got := tr.searchPrefix(tt.args.prefix); !reflect.DeepEqual(got, tt.want) {
+			if got := tr.SearchPrefix(tt.args.prefix); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Trie.searchPrefix() = %v, want %v", got, tt.want)
 			}
-		})
-	}
-}
-
-func TestTrie_Search(t *testing.T) {
-	type fields struct {
-		isEnd    bool
-		nodeList map[rune]*Trie
-		words    []*library.DictWord
-	}
-	type args struct {
-		word string
-	}
-	testTrie := Constructor()
-	testWord := library.DictWord{Spell: "zhan", Word: "展", Frequency: 1}
-	testTrie.Insert("zhan", []*library.DictWord{&testWord})
-	wantTrieExact := &Trie{isEnd: true, nodeList: make(map[rune]*Trie), words: []*library.DictWord{&testWord}}
-	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   []*library.DictWord
-		want1  bool
-	}{
-		{
-			name: "search exact",
-			fields: fields{
-				isEnd:    false,
-				nodeList: testTrie.nodeList,
-				words:    make([]*library.DictWord, 0),
-			},
-			args: args{
-				word: "zhan",
-			},
-			want:  wantTrieExact.words,
-			want1: true,
-		},
-		{
-			name: "search nil",
-			fields: fields{
-				isEnd:    false,
-				nodeList: testTrie.nodeList,
-				words:    make([]*library.DictWord, 0),
-			},
-			args: args{
-				word: "z",
-			},
-			want:  []*library.DictWord{},
-			want1: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tr := &Trie{
-				isEnd:    tt.fields.isEnd,
-				nodeList: tt.fields.nodeList,
-				words:    tt.fields.words,
-			}
-			got, got1 := tr.Search(tt.args.word)
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Trie.Search() = %v, want %v", got, tt.want)
-			}
-			if got1 != tt.want1 {
-				t.Errorf("Trie.Search() = %v, want1 %v", got1, tt.want1)
-			}
-		})
-	}
-}
-
-func TestTrie_StartsWith(t *testing.T) {
-	type fields struct {
-		isEnd    bool
-		nodeList map[rune]*Trie
-		words    []*library.DictWord
-	}
-	type args struct {
-		prefix string
-	}
-	testTrie := Constructor()
-	testWord := library.DictWord{Spell: "zhan", Word: "展", Frequency: 1}
-	testTrie.Insert("zhan", []*library.DictWord{&testWord})
-	wantTrieExact := &Trie{isEnd: true, nodeList: make(map[rune]*Trie), words: []*library.DictWord{&testWord}}
-	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   []*library.DictWord
-	}{
-		{
-			name: "search exact",
-			fields: fields{
-				isEnd:    false,
-				nodeList: testTrie.nodeList,
-				words:    make([]*library.DictWord, 0),
-			},
-			args: args{
-				prefix: "zhan",
-			},
-			want: wantTrieExact.words,
-		},
-		{
-			name: "search nil",
-			fields: fields{
-				isEnd:    false,
-				nodeList: testTrie.nodeList,
-				words:    make([]*library.DictWord, 0),
-			},
-			args: args{
-				prefix: "zhang",
-			},
-			want: nil,
-		},
-		{
-			name: "search with",
-			fields: fields{
-				isEnd:    false,
-				nodeList: testTrie.nodeList,
-				words:    make([]*library.DictWord, 0),
-			},
-			args: args{
-				prefix: "z",
-			},
-			want: []*library.DictWord{&testWord},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tr := &Trie{
-				isEnd:    tt.fields.isEnd,
-				nodeList: tt.fields.nodeList,
-				words:    tt.fields.words,
-			}
-			if got := tr.StartsWith(tt.args.prefix); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Trie.StartsWith() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestTrie_mergeChildren(t *testing.T) {
-	type fields struct {
-		isEnd    bool
-		nodeList map[rune]*Trie
-		words    []*library.DictWord
-	}
-	type args struct {
-		words *[]*library.DictWord
-	}
-	testTrie := Constructor()
-	testWord := library.DictWord{Spell: "zhan", Word: "展", Frequency: 1}
-	testTrie.Insert("zhan", []*library.DictWord{&testWord})
-	words := []*library.DictWord{&testWord}
-	tests := []struct {
-		name   string
-		fields fields
-		args   args
-	}{
-		{
-			name: "nil",
-			fields: fields{
-				isEnd:    false,
-				nodeList: testTrie.nodeList,
-				words:    make([]*library.DictWord, 0),
-			},
-			args: args{
-				words: &words,
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tr := &Trie{
-				isEnd:    tt.fields.isEnd,
-				nodeList: tt.fields.nodeList,
-				words:    tt.fields.words,
-			}
-			tr.mergeChildren(tt.args.words)
 		})
 	}
 }

@@ -2,7 +2,6 @@
 package module
 
 import (
-	"fmt"
 	"input_method/library"
 )
 
@@ -18,6 +17,22 @@ func Constructor() *Trie {
 	return &Trie{
 		nodeList: make(map[rune]*Trie),
 	}
+}
+
+// GetIsEnd GetIsEnd
+func (t *Trie) GetIsEnd() bool {
+	return t.isEnd
+}
+
+// GetNodeList GetNodeList
+func (t *Trie) GetNodeList() map[rune]*Trie {
+	return t.nodeList
+
+}
+
+// GetWords GetWords
+func (t *Trie) GetWords() []*library.DictWord {
+	return t.words
 }
 
 // Insert 递归迭代建树
@@ -40,11 +55,8 @@ func (t *Trie) Insert(spell string, words []*library.DictWord) {
 }
 
 // SearchPrefix prefix 前缀匹配
-func (t *Trie) searchPrefix(prefix string) *Trie {
+func (t *Trie) SearchPrefix(prefix string) *Trie {
 	node := t
-	if node == nil {
-		fmt.Println("aa")
-	}
 	for _, ch := range prefix {
 		ch -= 'a'
 		if node.nodeList[ch] == nil {
@@ -56,10 +68,11 @@ func (t *Trie) searchPrefix(prefix string) *Trie {
 	return node
 }
 
+/*
 // Search Search 精确查找
 // Returns if the word is in the trie
 func (t *Trie) Search(word string) ([]*library.DictWord, bool) {
-	node := t.searchPrefix(word)
+	node := t.SearchPrefix(word)
 	if node != nil && node.isEnd {
 		return node.words, true
 	}
@@ -70,7 +83,7 @@ func (t *Trie) Search(word string) ([]*library.DictWord, bool) {
 // Returns if there is any word in the trie that starts with the given prefix.
 func (t *Trie) StartsWith(prefix string) []*library.DictWord {
 	var words []*library.DictWord
-	node := t.searchPrefix(prefix)
+	node := t.SearchPrefix(prefix)
 	if node == nil {
 		return words
 	}
@@ -90,4 +103,4 @@ func (t *Trie) mergeChildren(words *[]*library.DictWord) {
 	for _, child := range t.nodeList {
 		child.mergeChildren(words)
 	}
-}
+}*/

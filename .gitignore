@@ -4,7 +4,7 @@
 output
 .*.swp
 .*.swo
-log/*
+log/
 dev/
 .vscode/
 .config/

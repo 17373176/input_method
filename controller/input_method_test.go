@@ -3,12 +3,16 @@ package controller
 
 import (
 	"reflect"
+	"regexp"
 	"testing"
 
+	"input_method/library"
 	"input_method/model/service"
 )
 
+// TestNewInputMethod 测试输入方法
 func TestNewInputMethod(t *testing.T) {
+	library.RegexMatch = regexp.MustCompile(library.URLRegular)
 	type args struct {
 		args []string
 	}

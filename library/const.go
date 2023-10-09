@@ -3,7 +3,9 @@ package library
 
 const (
 	// LogDir 日志目录
-	LogDir = "./log/ime.log"
+	LogDir = "./log/"
+	// LogFileName 日志文件名
+	LogFileName = "ime.log"
 	// DictDir 词典目录
 	DictDir = "./data"
 )

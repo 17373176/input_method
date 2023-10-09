@@ -2,13 +2,16 @@ package service
 
 import (
 	"reflect"
+	"regexp"
 	"testing"
 
 	"input_method/library"
 	"input_method/model/module"
 )
 
+// TestNewIme 测试NewIme
 func TestNewIme(t *testing.T) {
+	library.RegexMatch = regexp.MustCompile(library.URLRegular)
 	type args struct {
 		args      []string
 		batchSize int
@@ -47,7 +50,9 @@ func TestNewIme(t *testing.T) {
 	}
 }
 
-func TestIme_dictMultiLoader(t *testing.T) {
+// TestDictMultiLoader test
+func TestDictMultiLoader(t *testing.T) {
+	library.RegexMatch = regexp.MustCompile(library.URLRegular)
 	type fields struct {
 		dictTrie  *module.Trie
 		dictWords map[string][]*library.DictWord
@@ -95,7 +100,8 @@ func TestIme_dictMultiLoader(t *testing.T) {
 	}
 }
 
-func TestIme_buildDictTrie(t *testing.T) {
+// TestBuildDictTrie 测试构建词典trie
+func TestBuildDictTrie(t *testing.T) {
 	type fields struct {
 		dictTrie  *module.Trie
 		dictWords map[string][]*library.DictWord
@@ -124,7 +130,8 @@ func TestIme_buildDictTrie(t *testing.T) {
 	}
 }
 
-func TestIme_FindWords(t *testing.T) {
+// TestFindWords 测试获取词典中词
+func TestFindWords(t *testing.T) {
 	type fields struct {
 		dictTrie  *module.Trie
 		dictWords map[string][]*library.DictWord
@@ -201,7 +208,37 @@ func TestIme_FindWords(t *testing.T) {
 	}
 }
 
-func TestIme_sort(t *testing.T) {
+// TestMergeChildren 测试合并子节点
+func TestMergeChildren(t *testing.T) {
+	type args struct {
+		t     *module.Trie
+		words *[]*library.DictWord
+	}
+	testTrie := module.Constructor()
+	testWord := library.DictWord{Spell: "zhan", Word: "展", Frequency: 1}
+	testTrie.Insert("zhan", []*library.DictWord{&testWord})
+	words := []*library.DictWord{&testWord}
+	tests := []struct {
+		name string
+		args args
+	}{
+		{
+			name: "nil",
+			args: args{
+				t:     testTrie,
+				words: &words,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mergeChildren(tt.args.t, tt.args.words)
+		})
+	}
+}
+
+// TestSort 测试排序
+func TestSort(t *testing.T) {
 	type fields struct {
 		dictTrie  *module.Trie
 		dictWords map[string][]*library.DictWord
@@ -257,7 +294,8 @@ func TestIme_sort(t *testing.T) {
 	}
 }
 
-func Test_swap(t *testing.T) {
+// TestSwap TestSwap
+func TestSwap(t *testing.T) {
 	type args struct {
 		srcWords   []*library.DictWord
 		index      int

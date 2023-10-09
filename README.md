@@ -63,5 +63,58 @@ gotests -only swap ./model/service/ime.go
 -w 输出到：源文件名称_test.go 的文件
 gotests -only -w swap ./model/service/ime.go
 
-命令行执行 go test -v -coverprofile=c.out && go tool cover -html=c.out -o=tag.html 或 直接在测试函数上方点击 run test, go-ut:run test
+执行单测并计算覆盖率: go test -v -cover
+执行 go test -v -coverprofile=c.out && go tool cover -html=c.out -o=tag.html 或 直接在测试函数上方点击 run test, go-ut:run test
 
+代码静态检查/扫描 golangci-lint
+
+<https://golangci-lint.run/>
+
+安装命令：
+go install github.com/golangci/golangci-lint/cmd/golangci-lint@master
+
+把如下代码加入命名为.golangci.yml的文件，放入根目录
+
+```
+output:
+  format: json
+  print-issued-lines: true
+linters:
+  # enable-all: true
+  # disable:
+  #   - deadcode
+  disable-all: true
+  enable:
+    - stylecheck
+    - revive
+    - gosimple
+    - gofmt
+    - lll
+    - errcheck
+    - errorlint
+    - govet
+    - gocyclo
+    - goimports
+linters-settings:
+  lll:
+    # max line length, lines longer will be reported. Default is 120.
+    # '\t' is counted as 1 character by default, and can be changed with the tab-width option
+    line-length: 160
+    # tab width in spaces. Default to 1.
+    tab-width: 1
+  errcheck:
+    # report about not checking of errors in type assertions: `a := b.(MyStruct)`;
+    # default is false: such cases aren't reported by default.
+    check-type-assertions: false
+
+    # report about assignment of errors to blank identifier: `num, _ := strconv.Atoi(numStr)`;
+    # default is false: such cases aren't reported by default.
+    check-blank: false
+  gocyclo:
+    # Minimal code complexity to report.
+    # Default: 30 (but we recommend 10-20)
+    min-complexity: 30
+```
+
+在代码库根目录执行：
+golangci-lint run
